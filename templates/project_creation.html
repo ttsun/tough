@@ -1,0 +1,50 @@
+<style type="text/css" media="screen">
+    .form-horizontal .control-label{
+        width:120px;
+    }
+    .form-horizontal .controls{
+        margin-left:130px;
+    }
+    #errormsg{
+        display: none;
+    }
+</style>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#project_form").submit(function(){
+            if(validateSpecialChars($("#id_name").val())){
+                return true;
+            }else{
+                $("#errormsg").text("Please enter a valid project name.");
+                $("#errormsg").show();
+                return false;
+            }
+        });
+    });
+</script>
+<div class = "row-fluid">
+    <div class = "span12">
+        <h2>Create New Project</h2>
+        {% if formtype == 'create' %}
+        <form method = "POST" action = "{% url 'noah.views.create_project'%}" class="form-horizontal" id="project_form">
+        {% else %}
+        <form method = "POST" action = "{% url 'noah.views.edit_project' project_id=project_id%}" class="form-horizontal" id="project_form">
+        {% endif %}
+            <p class="error" id="errormsg"></p>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="control-group">
+                <label for="id_{{field.html_name}}" class="control-label">{{field.label}}</label>
+                <div class="controls">
+                    {{ field }}                 
+                </div> 
+            </div>
+            {% endfor %}
+            <div class = "control-group">
+                <div class = "controls">
+                    <input class="btn btn-primary" type = "submit">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

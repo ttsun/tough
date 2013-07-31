@@ -1,0 +1,20 @@
+<form id="batch_form" action = "{% url 'noah.views.ajax_save' job_id=job_id input_type='batch'%}" method="POST" class = "form-horizontal">
+    {% csrf_token %}
+    <input type = "hidden" name = "blockType" value = "1">
+    {%for field in job.get_comp_settings_form%}
+        <div class="control-group">
+            <label for="id_{{field.html_name}}" class="control-label">{{field.label}}</label>
+            <div class="controls">
+                {{ field }}                 
+            </div> 
+        </div>
+    {%endfor%}
+    <div class="control-group">
+        <div class="controls">
+            <input type="hidden" id="job_id" name="job_id" value="{{ job_id }}" />
+            <input class="btn btn-primary" type="submit" value="Save"/>
+            <button class="btn" type="button" id='cancel'>Cancel</button>                
+        </div>
+    </div>
+</form>
+            

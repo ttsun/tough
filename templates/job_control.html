@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <style type="text/css">
+        thead tr th{
+            text-align: center !important;
+            background-color: #CCCCCC !important;
+        }
+        table{
+            border-spacing: 0 !important;
+        }
+        .state, .numprocs{
+            width:110px;
+        }
+        .time{
+            width:240px;
+        }
+        .job_id, .time, .actions{
+            width:200px;
+        }
+        .job_id, .time, .state, .numprocs, .actions{
+            text-align: center !important;
+        }
+        tr.project-name th{
+            font-size:0.9em;
+            padding:0 1em !important;
+            background-color: #EEEEEE !important;
+        }
+        #nojobs tr td{
+            background-color: #EEEEEE !important;
+            height:100px;
+            text-align: center;
+            font-size:1.3em;
+            vertical-align: middle;
+        }
+        .span2.well{
+            margin-top:0;
+        }
+
+        .joboptions{
+            width: 50px;
+        }
+        #optionbuttons{
+            margin-bottom:10px;
+            display:none;
+        }
+        .pages a{
+            margin:0 2px;
+        }
+        .pages a.active{
+            color:black;
+            cursor:default;
+        }
+        .pages a.active:hover{
+            text-decoration:none;
+        }
+        .pages{
+            float:right;
+            padding:0 1em;
+        }
+        .pages:before{
+            content:"Page: ";
+        }
+        #projectsearch{
+            width:100px;
+            margin:12px;
+        }
+    </style>
+    <script type="text/javascript">
+        var MAX_ENTRIES =4;
+        $(document).ready(function(){
+            // $(".optionbuttons").css('visibility', 'hidden');
+            setupPaging();
+            $(".del").click(function(e){
+                e.preventDefault();
+                var url = $(this).attr("href");
+                Alertify.dialog.confirm("Are you sure you want to delete this job? This operation is irreversable", 
+                    function(){
+                        Alertify.dialog.confirm("Do you want to delete the associated job files?", 
+                            function(){
+                                console.log(url);
+                                $.post(url, {"files": true}, function(data){
+                                    window.location.reload();
+                                    return false;
+                                });
+                            }, 
+                            function(){
+                                $.post(url, function(data){
+                                    window.location.reload();
+                                    return false;
+                                });
+                            }
+                        );
+                    }, 
+                    function(){
+                        return false;
+                    }
+                );
+            });
+            $(".jobcheck").click(function(e){
+                $("#optionbuttons").slideDown();
+                console.log("checkbox clicked");
+                switch ($('input[name=jobcheck]:checked').length){
+                    case 0:
+                        $("#optionbuttons").slideUp();
+                        break;
+                    case 1:
+                        // $(".optionbuttons").css('visibility', 'visible');
+                        $("#singlejoboptions").fadeIn();
+                        $("#copybutton").attr("href", "/job/" + $(this).attr("data-id") + "/copy/");
+                        $("#movebutton").attr("href","/job/" + $(this).attr("data-id") + "/move/" );
+                        break;
+                    case 2:
+                        // $("#multiplejoboptions").css('visibility', 'visible');
+                        var selectedjobs = [];
+                        $('input[name=jobcheck]:checked').each(function(){
+                            selectedjobs.push($(this).attr('data-id'));
+                        });
+                        $("#movebutton").attr("href", "/ajax/job/move/?jobs=" + selectedjobs.join(','))
+                        $("#singlejoboptions").fadeOut();
+                        break;
+                }
+            });
+            $(".joboptions").tooltip({delay:{show:400, hide:225}});
+
+            var searchstring;
+            $("#projectsearch").keyup(function(e){
+                searchstring = $(this).val();
+                $(this).parent().siblings().each(function(){
+                    if($(this).text().indexOf(searchstring) == 0){
+                        $(this).show();
+                        $(this).attr("selected", "selected");
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            $("#projectsearch").keydown(function(e){
+                if(e.keyCode == 13){
+                    if($(".projectmoveoptions:visible").length == 1){
+                        $(".projectmoveoptions:visible").click();
+                    } else {
+                        $("#projectmovelist").focus();
+                    }
+                }
+            });
+
+            $(".dropdown-toggle").click(function(e){
+                e.preventDefault();
+                if($(this).siblings("ul").is(":visible")){
+                    $(this).siblings("ul").hide();
+                }else{
+                    $(this).siblings("ul").show(); 
+                }
+            });
+            $(".deletemultiple").click(function(e){
+                e.preventDefault;
+                var url = '/job/batch/del/'
+                var selectedjobs = new Array();
+                var checkedjobs = $('input[name=jobcheck]:checked');
+                $(checkedjobs).each(function(){
+                    selectedjobs.push($(this).attr('data-id'));
+                });
+                console.log(selectedjobs);
+                Alertify.dialog.confirm("Are you sure you want to delete these jobs? This operation is irreversable", 
+                    function(){
+                        Alertify.dialog.confirm("Do you want to delete the associated job files?", 
+                            function(){
+                                Alertify.log.info("Deleting selected jobs and files on HPC...");
+                                $.post(url, {files: true, job_ids: JSON.stringify(selectedjobs)}, function(data){
+                                    window.location.reload();
+                                    return false;
+                                });
+                            }, 
+                            function(){
+                                Alertify.log.info("Deleting selected jobs, but keeping files on HPC...");
+                                $.post(url, {job_ids:selectedjobs}, function(data){
+                                    window.location.reload();
+                                    return false;
+                                });
+                            }
+                        );
+                    }, 
+                    function(){
+                        return false;
+                    }
+                );
+            });
+            $(".projectmoveoptions").click(function(e){
+                e.preventDefault();
+                var url = $(this).attr("href");
+                var selectedjobs = new Array();
+                var checkedjobs = $('input[name=jobcheck]:checked');
+                $(checkedjobs).each(function(){
+                    selectedjobs.push($(this).attr('data-id'));
+                });
+                Alertify.log.info("Moving jobs to " + $(this).attr("id"));
+                $.post(url, {job_ids:JSON.stringify(selectedjobs)}, function(data){
+                    window.location.reload();
+                    return false;
+                });
+            });
+            $(".project_header").click(function(e){
+                e.preventDefault();
+                if ($(this).hasClass("open")){
+                    $(this).parent().parent().siblings().hide();
+                    $(this).removeClass("icon-chevron-down").addClass("icon-chevron-right");
+                    $(this).removeClass("open");
+                } else {
+                    var $page = $(this).siblings('.pages').children(".active");
+                    console.log($page)
+                    if($page.attr("data-page")!=-1){
+                        $("#"+$page.attr("data-id")).children("tr:not(.project-name)").hide();
+                        $("#"+$page.attr("data-id")).children(".page"+$page.attr("data-page")).show();
+                    }else{
+                        $("#"+$page.attr("data-id")).children("tr:not(.project-name)").show();
+                    }
+                    $(this).addClass("icon-chevron-down").removeClass("icon-chevron-right");
+                    $(this).addClass("open");
+                }
+                return false;
+            });
+            $("#projectbar a").click(function(e){
+                e.preventDefault();
+                if($(this).parent(".disabled").length == 0){
+                    $("#projectbar .active").removeClass("active");
+                    $(this).parent("li").addClass("active");
+                    var curr = $(this).attr("href");
+                    if(curr != "#show"){
+                        $(".project:not('"+curr+"')").hide()
+                        $(curr).show(500);
+                    } else{
+                        $(".project").show(500);
+                    }
+                }
+                return false;
+            });
+        });
+    function setupPaging(){
+        $(".project").each(function(i){
+            var max_pages = Math.ceil($(this).children("tr:not(.project-name)").length/MAX_ENTRIES);
+            var $entries = $(this).children("tr:not(.project-name)");
+            var $pages = $(this).children("tr.project-name").find(".pages").html("");
+            // Writes out all the page numbers
+            // Sets page 1 to active
+            for(var x = 1; x<=max_pages; x++){
+                if(x == 1){
+                    $pages.append("<a href='#' data-page='"+x+"' class='page-link active' data-id='"+$(this).attr("id")+"'>"+x+"</a>");
+                }else{
+                    $pages.append("<a href='#' data-page='"+x+"' class='page-link' data-id='"+$(this).attr("id")+"'>"+x+"</a>");
+                }
+            }
+            if(max_pages > 1){
+                $pages.append("<a href='#' class='page-link' data-page='-1' data-id='"+$(this).attr("id")+"'>Show All</a>");
+            }
+
+            $entries.each(function(i){
+                $(this).addClass("page"+Math.ceil((i+1)/MAX_ENTRIES));
+            });
+            $entries.hide();
+            $(".page1").show();
+        });
+        $(".page-link").click(function(e){
+            e.preventDefault();
+            if($(this).hasClass("active")){
+                return false;
+            }
+            $(this).siblings("a.active").removeClass("active");
+            $(this).addClass("active");
+            if($(this).attr("data-page")!=-1){
+                $("#"+$(this).attr("data-id")).children("tr:not(.project-name)").hide();
+                $("#"+$(this).attr("data-id")).children(".page"+$(this).attr("data-page")).show();
+            }else{
+                $("#"+$(this).attr("data-id")).children("tr:not(.project-name)").show();
+            }
+            return false;
+        });
+    }
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <div class = "row-fluid">
+        <div class = "span2 well">
+            <ul class = "nav nav-list">
+                <li class="nav-header">Options</li>
+                <li><a href="{% url 'noah.views.create_job' %}" class="popup">Create Job</a></li>
+                <li><a href="{% url 'noah.views.create_project' %}" class = "popup">Create Project</a></li>
+            </ul>
+            <ul class="nav nav-list" id = "projectbar">
+                <li class="nav-header">Projects</li>
+                {% if user.get_projects %}
+                    <li class="active"><a href="#show">Show All</a></li>
+                {% endif %}
+                {% if user.get_orphan_jobs %}
+                    <li><a href="#project-ungrouped">Ungrouped</a></li>                    
+                {% endif %}
+                <li class="divider"></li>
+                {% for project in user.get_projects %}
+                    <li><a href="#project-{{project.pk}}">{{project.name}}</a></li>
+                {% endfor %}
+                {% if not user.get_projects %}
+                    <li class="disabled"><a>No Projects</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class = "span9">
+            <div class = "row-fluid" id = "optionbuttons">
+                <div class = "btn-group span4 row-fluid optionbuttons" id="multiplejoboptions">
+                    <a class="btn joboptions deletemultiple" data-toggle="tooltip" title="Delete"><i class="icon-trash"></i></a>
+                    <a href="" class="btn mv popup joboptions" id="movebutton" data-toggle="tooltip" title="Move"><i class="icon-share-alt"></i></a>
+                    <div class = "btn-group">
+                        <a class="btn dropdown-toggle joboptions movetoproject" data-toggle="tooltip"  title="Project"><i class="icon-folder-close"></i> <span class="caret"></span></a>
+                        <ul class="dropdown-menu" id="projectmovelist">
+                            <li><input id="projectsearch" type="text" class="input-medium search-query" value=""></li>
+                            {% if user.get_projects.count > 0 %}
+                                {% for project in user.get_projects %}
+                                <li><a id = "{{project.name}}" class = "projectmoveoptions" href = "{% url 'noah.views.change_project' to_project_id=project.pk %}">{{project.name}}</a></li>
+                                {% endfor %}
+                                <li><a class = "projectmoveoptions" href = "{% url 'noah.views.change_project' to_project_id=0 %}">None</a></li>
+                            {% else %}
+                                <li>You have no projects!</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                <div id="singlejoboptions" class = "btn-group offset span4 row-fluid optionbuttons">
+                    <a href="" class="btn cp popup joboptions" id="copybutton" data-toggle="tooltip" title="Copy"><img src="/static/img/copy-icon.png"/ style = "width:16px; height:16px"></a>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Job Name</th>
+                        <th class="state">Status</th>
+                        <th class="time">Time Queued</th>
+                        <th class="numprocs">Processors</th>
+                        <th class="job_id">PBS Job ID</th>
+                        
+                    </tr>
+                </thead>
+                {% for project in user.get_projects %}
+                    <tbody id="project-{{project.pk}}" class = "project">
+                        <tr class="project-name">
+                            <th colspan="5"><i class = "icon-chevron-down project_header open"></i> <strong>{{project.name}} | </strong><a class="edit-btn" href="{% url 'noah.views.project_view' project_id=project.pk %}"><small>Edit Project</small></a> <span class="pages"></span></th>
+                        </tr>   
+                        {% for job in project.job_set.all %}
+                            {% if job.exists %}
+                            <tr>
+                                <td class="name"><label class = "checkbox"><input type = "checkbox" class = "jobcheck" name = "jobcheck" data-id="{{job.pk}}"/><a href="{% url 'noah.views.job_edit' job.pk %}">{{job.jobname}}</a> | <a href = "{% url 'noah.views.job_view' job_id=job.pk %}"><small>Details</small></a></label></td>
+                                <td class="state">{{job.state}}</td>
+                                <td class="time">{{job.time_started}}</td>
+                                <td class="numprocs">{{job.numprocs}}</td>
+                                <td class="job_id">{{job.pbsjob_id}}</td>
+                                
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td class="rebuild" colspan = "4"><i class = "icon-trash"></i> | <strong><em>{{job.jobname}}</em></strong> was destroyed (likely by the <a href = "https://www.nersc.gov/users/data-and-file-systems/file-systems/global-scratch/">scratch monster</a>). Rebuilding will retreive past blocks, but not MESH or INCON files.</td>
+                                <td><a href="{% url 'noah.views.rebuild_job' job_id=job.pk%}" class="btn cp">Rebuild</a></td>
+                            </tr>
+                            {% endif %}
+
+                        {% endfor %}
+                    </tbody>
+                {% endfor %}
+                <tbody id="project-ungrouped" class = "project">
+                    {% if user.get_orphan_jobs %}
+                    <tr class="project-name">
+                        <th colspan="5"><i class = "icon-chevron-down project_header open"></i>Ungrouped <span class="pages"></span></th>
+                    </tr>
+                    {% endif %}
+                    {% for job in user.get_orphan_jobs %}
+                        {% if job.exists %}
+                            <tr>
+                                <td class="name"><label class = "checkbox"><input type = "checkbox" class = "jobcheck" name = "jobcheck" data-id = "{{job.pk}}"><a href="{% url 'noah.views.job_edit' job.pk %}">{{job.jobname}}</a> | <a href = "{% url 'noah.views.job_view' job_id=job.pk %}"><small>Details</small></a></label></td>
+                                <td class="state">{{job.state}}</td>
+                                <td class="time">{{job.time_started}}</td>
+                                <td class="numprocs">{{job.numprocs}}</td>
+                                <td class="job_id">{{job.pbsjob_id}}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td class="rebuild" colspan = "4"><i class = "icon-trash"></i> | <strong><em>{{job.jobname}}</em></strong> was destroyed (likely by the <a href = "https://www.nersc.gov/users/data-and-file-systems/file-systems/global-scratch/">scratch monster</a>). Rebuilding will retreive past blocks, but not MESH or INCON files.</td>
+                                <td><a href="{% url 'noah.views.rebuild_job' job_id=job.pk%}" class="btn cp">Rebuild</a></td>
+                            </tr>
+                            {% endif %}
+                    {% endfor %}
+                </tbody>
+                {% if all_jobs.count == 0 %}
+                    <tbody id="nojobs">
+                        <tr>
+                            <td colspan="6">It looks like you don't have any jobs... Click <strong>Create Job</strong> on the sidebar to create a new job.</td>
+                        </tr>
+                    </tbody>
+                {% endif %}
+            </table>
+        </div>
+        
+    </div>
+{% endblock content %}

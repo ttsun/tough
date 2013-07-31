@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.3.custom.min.css">
+<script type="text/javascript" src="/static/js/jquery-ui-1.10.3.custom.min.js"></script>
+<style type="text/css"> 
+.btn{
+    margin:5px;
+}
+</style>
+<script type = "text/javascript">
+$(document).ready(function(){
+    $("#deleteproject").click(function(e){
+        e.preventDefault();
+        var url = $(this).attr("href");
+                Alertify.dialog.confirm("Are you sure you want to delete this project? This operation is irreversable", 
+                    function(){
+                        Alertify.dialog.confirm("Do you want to delete the associated jobs?", 
+                            function(){
+                                $.post(url, {"deljobs": true}, function(data){
+                                    window.location = data['redirect'];
+                                    return false;
+                                });
+                            }, 
+                            function(){
+                                $.post(url, function(data){
+                                    window.location = data['redirect'];
+                                    return false;
+                                });
+                            }
+                        );
+                    }, 
+                    function(){
+                        return false;
+                    }
+                );
+    });
+})  
+</script>
+{% endblock head %}
+{% block content %}
+    <div class = "row-fluid">
+        <div class = "span2 well">
+            <ul class = "nav nav-list">
+                <li class="nav-header">Options</li>
+                <a href="{% url 'noah.views.edit_project' project_id=project.pk %}" class = "popup span10" >Edit Information</a>
+                <a id = "deleteproject" href="{% url 'noah.views.delete_project' project_id=project.pk %}" class = "span10">Delete Project</a>
+            </ul>
+        </div>
+        <div class = "span10">
+            <h1>{{name}}</h1>
+            <h3>Project Information</h3>
+            <p><strong>Project Creator: </strong> {{project.creator}}</p>
+            <p><strong>Users: </strong>
+                {% for user in project.users.all %}
+                    {{user}}, 
+                {% endfor %}
+            </p>
+            <p><strong>Project Description: </strong>{{project.description}}</p>
+            <h2>Jobs in Project:</h2>
+            <table class = "table table-striped">
+                <thead>
+                    <tr>
+                        <th>Job Name</th>
+                        <th>Processors</th>
+                        <th>PBS Job ID</th>
+                        <th>Time Queued</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in project.job_set.all %}
+                            <tr>
+                                <td class="name"><a href="{% url 'noah.views.job_edit' job.pk %}">{{job.jobname}}</a></td>
+                                <td class="numprocs">{{job.numprocs}}</td>
+                                <td class="job_id">{{job.pbsjob_id}}</td>
+                                <td class="time">{{job.time_started}}</td>
+                                <td class="state">{{job.state}}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'noah.views.create_job' type='copy' job_id=job.pk %}" class="btn cp popup">Copy</a>
+                                        <a href="{% url 'noah.views.create_job' type='move' job_id=job.pk %}" class="btn mv popup">Move</a>
+                                        <a href="{% url 'noah.views.delete_job' job_id=job.pk %}" class="btn del">Delete</a>
+                                        <a href = "{% url 'noah.views.job_view' job_id=job.pk %}" class="btn">Details</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

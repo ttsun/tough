@@ -1,0 +1,398 @@
+[
+{
+    "pk": 1, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "batch job", 
+        "ordering": 0, 
+        "required": 2, 
+        "tough_name": "batch", 
+        "default_content": "", 
+        "name": "batch"
+    }
+},
+{
+    "pk": 2, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Optional; list of mass or heat sinks and sources", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "gener", 
+        "default_content": "", 
+        "name": "gener"
+    }
+},
+{
+    "pk": 3, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Hydrogeologic parameters for various reservoir domains", 
+        "ordering": 5, 
+        "required": 1, 
+        "tough_name": "rocks", 
+        "default_content": "", 
+        "name": "rocks"
+    }
+},
+{
+    "pk": 4, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Input the parameters for hydrate properties and their behaviors", 
+        "ordering": 3, 
+        "required": 1, 
+        "tough_name": "hydrate", 
+        "default_content": "", 
+        "name": "hydrate"
+    }
+},
+{
+    "pk": 5, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "List of the grid blocks", 
+        "ordering": 3, 
+        "required": 3, 
+        "tough_name": "eleme", 
+        "default_content": "", 
+        "name": "elements"
+    }
+},
+{
+    "pk": 6, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "List of the flow connections between the individual blocks", 
+        "ordering": 4, 
+        "required": 3, 
+        "tough_name": "conne", 
+        "default_content": "", 
+        "name": "connections"
+    }
+},
+{
+    "pk": 7, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Computational parameters to be executed", 
+        "ordering": 3, 
+        "required": 3, 
+        "tough_name": "param", 
+        "default_content": "", 
+        "name": "parameters"
+    }
+},
+{
+    "pk": 8, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "diffusivities of mass components", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "diffusu", 
+        "default_content": "", 
+        "name": "diffusion"
+    }
+},
+{
+    "pk": 9, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "list of initial conditions for specific reservoir domains", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "indom", 
+        "default_content": "", 
+        "name": "indom"
+    }
+},
+{
+    "pk": 10, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "list of initial conditions for individual blocks", 
+        "ordering": 5, 
+        "required": 2, 
+        "tough_name": "incon", 
+        "default_content": "", 
+        "name": "incon"
+    }
+},
+{
+    "pk": 11, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Data record (single line) with simulation title", 
+        "ordering": 1, 
+        "required": 1, 
+        "tough_name": "title", 
+        "default_content": "", 
+        "name": "Title"
+    }
+},
+{
+    "pk": 12, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Dynamic memory allocation", 
+        "ordering": 2, 
+        "required": 1, 
+        "tough_name": "memory", 
+        "default_content": "", 
+        "name": "memory"
+    }
+},
+{
+    "pk": 13, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "End of code and initiates simulation", 
+        "ordering": 10, 
+        "required": 3, 
+        "tough_name": "endcy", 
+        "default_content": "ENDCY----1----*----2----*----3----*----4----*----5----*----6----*----7----*----8\n", 
+        "name": "endcy"
+    }
+},
+{
+    "pk": 14, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "End of code and skips simulation", 
+        "ordering": 10, 
+        "required": 3, 
+        "tough_name": "endfi", 
+        "default_content": "", 
+        "name": "endfi"
+    }
+},
+{
+    "pk": 15, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Optional;Parameters for relative permeability and capillary pressure (reservoir)", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "wetta", 
+        "default_content": "", 
+        "name": "wettability"
+    }
+},
+{
+    "pk": 16, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional;Provides time-variable conditions at specific boundaries ( of the simulation)", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "boundaries", 
+        "default_content": "", 
+        "name": "boundaries"
+    }
+},
+{
+    "pk": 17, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional;Specifies parameters used by linear equation solvers ", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "solver", 
+        "default_content": "", 
+        "name": "solver"
+    }
+},
+{
+    "pk": 18, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional;Specification of times for generating printout (output?)", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "times", 
+        "default_content": "", 
+        "name": "times"
+    }
+},
+{
+    "pk": 19, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional; specifies grid blocks for desired time series data", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "elem_time_series", 
+        "default_content": "", 
+        "name": "elem time series"
+    }
+},
+{
+    "pk": 20, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional;specifies connections for desired time series data", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "conx_time_series", 
+        "default_content": "", 
+        "name": "connection time series"
+    }
+},
+{
+    "pk": 21, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional;specifies sinks and sources for desired time series data", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "ss_time_series", 
+        "default_content": "", 
+        "name": "sinks&sources time series data"
+    }
+},
+{
+    "pk": 22, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional; specifies grid subdomains for desired time series data", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "subdomains", 
+        "default_content": "", 
+        "name": "subdomains"
+    }
+},
+{
+    "pk": 23, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional; suppresses printout of version numbers and dates", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "nover", 
+        "default_content": "", 
+        "name": "nover"
+    }
+},
+{
+    "pk": 24, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "optional; one data record for more flexible initialization ", 
+        "ordering": 5, 
+        "required": 3, 
+        "tough_name": "start", 
+        "default_content": "", 
+        "name": "Start"
+    }
+},
+{
+    "pk": 25, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "mesh file", 
+        "ordering": 5, 
+        "required": 2, 
+        "tough_name": "mesh", 
+        "default_content": "", 
+        "name": "mesh"
+    }
+},
+{
+    "pk": 26, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "All extra inputs", 
+        "ordering": 6, 
+        "required": 0, 
+        "tough_name": "extras", 
+        "default_content": "", 
+        "name": "extras"
+    }
+},
+{
+    "pk": 27, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "The input output files of the job.",
+        "ordering": 1,
+        "required": 2,
+        "tough_name": "io_files",
+        "default_content": ">>>IO_FILES: Begin of the data block \n &IO_File_Names   IO_file_nomenclature = 'USER-SPECIFIED',   ! Options: 'STANDARD-T', 'INPUT-FILE-NAME-BASED' OR 'USER-SPECIFIED'\n                 MESH_file_name  = 'mesh',                     ! The name of the MESH file  (These are needed only when <IO_file_nomenclature> = 'USER-SPECIFIED')\n                 INCON_file_name = 'incon',                    ! The name of the INCON file\n                 SAVE_file_name  = 'SAVE',                     ! The name of the SAVE file\n                 SinkSource_file_name = 'sinks_sources'          ! The name of the SinkSource file\n                 /\n<<<End of the <IO_FILES> data block",
+        "name": "IO Files"  
+    }
+},
+{
+    "pk": 28, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Time information", 
+        "ordering": 5, 
+        "required": 1, 
+        "tough_name": "time_discretization_data", 
+        "default_content": "", 
+        "name": "Time Discretization Data"
+    }
+},
+{
+    "pk": 29, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "input for Newton-Raphson Iterations", 
+        "ordering": 5, 
+        "required": 1, 
+        "tough_name": "nr_iteration_data", 
+        "default_content": "", 
+        "name": "NR Iteration Data"
+    }
+},
+{
+    "pk": 30, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Options for output files", 
+        "ordering": 5, 
+        "required": 1, 
+        "tough_name": "output_options", 
+        "default_content": "", 
+        "name": "Output Options"
+    }
+},
+{
+    "pk": 31, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Computational parameters for the job", 
+        "ordering": 5, 
+        "required": 0, 
+        "tough_name": "computational_parameters", 
+        "default_content": "", 
+        "name": "Computational Parameters for TOUGH"
+    }
+},
+{
+    "pk": 32, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "Not working.", 
+        "ordering": 5, 
+        "required": 3, 
+        "tough_name": "df_well_model", 
+        "default_content": "", 
+        "name": "df well model"
+    }
+},
+{
+    "pk": 33, 
+    "model": "tough.blocktype", 
+    "fields": {
+        "description": "The sinks and sources information for the job", 
+        "ordering": 5, 
+        "required": 2, 
+        "tough_name": "sinks_sources", 
+        "default_content": "", 
+        "name": "Sinks&Sources"
+    }
+}
+]

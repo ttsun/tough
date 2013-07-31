@@ -1,0 +1,170 @@
+<link rel="stylesheet" type="text/css" href="/static/css/jquery-ui-1.10.3.custom.min.css">
+<script type="text/javascript" src="/static/js/jquery-ui-1.10.3.custom.min.js"></script>
+<style type = "text/css">
+#id_mesh{
+	line-height:0px !important;
+}
+.disabled{
+    display:none;
+}
+</style>
+<script type = "text/javascript">
+function addListeners(){
+    $("#inputselect").change(function(e){
+        var inputtype = $(this).val();
+        switch (inputtype){
+            case "upload":
+                $("#fileuploadform").removeClass("disabled");
+                $("#fileimportform").addClass("disabled");
+                break;
+            case "import":
+                $("#fileimportform").removeClass("disabled");
+                $("#fileuploadform").addClass("disabled");
+                break;
+            case "none":
+                $("#fileimportform").addClass("disabled");
+                $("#fileuploadform").addClass("disabled");
+        }
+    }); 
+    $('#fileuploadform').submit(function(e){
+        e.preventDefault();
+        var formData = new FormData($('#fileuploadform')[0]);
+        $.ajax({
+            url: $("#fileuploadform").attr("action"),  //server script to process data
+            type: 'POST',
+            //Ajax events
+            {% if job.edit_type != 1 %}
+                beforeSend: function(){
+                    Alertify.log.info("Uploading your file...");
+                    $("#fileform").append("<div id = 'loadingscreen'><p>Uploading...</p><img src = '/static/img/loading.gif'></div>");
+                },
+                success: function(response){
+                    if(response.success){
+                        $(".closedialog").click();
+                        $("[href='#files']").click();
+                        Alertify.log.success(response.filename + " was successfully uploaded!");
+                    }else{
+                        Alertify.log.error("Something went wrong when parsing. Please try again.");
+                    }
+                    $("#loadingscreen").remove();
+                },
+            {% else %}
+                beforeSend: function(){
+                    if($("#filetype").val() == 'infile'){
+                        $("#fileform").append("<div id = 'loadingscreen'><p>Uploading...</p><img src = '/static/img/loading.gif'></div>");
+                        Alertify.log.info("Uploading and parsing file...");
+                    } else {
+                        $("#fileform").append("<div id = 'loadingscreen'><p>Uploading...</p><img src = '/static/img/loading.gif'></div>");
+                        Alertify.log.info("Uploading your {{file_type}} file...");
+                    }
+                },
+                success: function(response){
+                    if(response.success){
+                        window.location.href = response.redirect;
+                    }else{
+                        Alertify.log.error("Something went wrong when parsing. Please try again.");
+                    }
+                    $("#loadingscreen").remove();
+                },
+            {% endif %}
+            // Form data
+            data: formData,
+            //Options to tell JQuery not to process data or worry about content-type
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    });  
+    
+    $("#fileimportform").submit(function(e){
+        e.preventDefault();
+        var formData = new FormData($('#fileimportform')[0]);
+        $.ajax({
+            url: $("#fileimportform").attr("action"),
+            type: 'POST',
+
+            beforeSend: function(){
+                $("#fileform").append("<div id = 'loadingscreen'><p>Importing...</p><img src = '/static/img/loading.gif'></div>");
+                Alertify.log.info("Importing your {{file_type}} file...");
+            }, 
+            success: function(response){
+                console.log("got to success")
+                if(response.success){
+                    window.location.href = response.redirect;
+                }else{
+                    Alertify.log.error("Something went wrong when importing. Please try again.");
+                }
+                $("#loadingscreen").remove();
+            },
+
+            data: formData, 
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    });
+}
+
+</script>
+<div class="row-fluid">    
+    <div class = "span12" id = "fileform">
+        {% if file_type != "file" %}
+            <h2 id = "title">Upload {{file_type.upper}} File</h2>
+        {% else %}
+            <h2 id="title"> Upload File</h2>
+        {% endif %}
+        {% if file_type != "infile" %}
+            <select id="inputselect" placeholder="Select your MESH input method">
+                <option value = "none">None Selected</option>
+                <option class="inputoptions" id="upload" value = "upload">Upload from my computer</option>
+                {% if file_type != "file" %}
+                    <option class="inputoptions" id="import" value = "import">Import from another job</option>
+                {% endif %}
+            </select>
+            <form class = "disabled" action = "{% url 'noah.views.file_upload' job_id=job_id file_type=file_type %}" method = "POST" id = "fileuploadform" enctype = "multipart/form-data">
+                {% csrf_token %}
+                <input type = "hidden" id="filetype" name="filetype" value="{{file_type}}" />
+                {%for field in job.get_file_upload_form %}
+                <div class="control-group">
+                <label for = "id_{{field.html_name}}" class = "control-label"></label>
+                    <div class="controls">
+                    {{ field }}
+                    </div>
+                </div>                 
+                {%endfor%}
+                <input type="submit" class = "btn btn-primary" value="Upload" />
+                <button class = "closedialog btn">Cancel</button>
+            </form>
+            <form class = "disabled" action = "{% url 'noah.views.import_file' job_id=job_id file_type=file_type %}" method="POST" id = "fileimportform">
+                {% csrf_token %}
+                <input type = "hidden" name = "blockType" value = "{{block.blockType.pk}}">
+                <div class = "control-group">
+                    {% for field in block.get_import_form %}
+                    <div class = "control">
+                        {{field}}
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="job_id" name="job_id" value="{{ job_id }}" />
+                <input class="btn btn-primary" type="submit" id='saveimportblock' value="Import"/>
+                <button class="btn" type="button" id='cancel'>Cancel</button>
+            </form>
+        {% else %}
+            <form action = "{% url 'noah.views.file_upload' job_id=job_id file_type=file_type %}" method = "POST" id = "fileuploadform" enctype = "multipart/form-data">
+                {% csrf_token %}
+                <input type = "hidden" id="filetype" name="filetype" value="{{file_type}}" />
+                {%for field in job.get_file_upload_form %}
+                <div class="control-group">
+                <label for = "id_{{field.html_name}}" class = "control-label"></label>
+                    <div class="controls">
+                    {{ field }}
+                    </div>
+                </div>                 
+                {%endfor%}
+                <input type="submit" class = "btn btn-primary" value="Upload" />
+                <button class = "closedialog btn">Cancel</button>
+            </form>
+        {% endif %}
+
+    </div>
+</div>

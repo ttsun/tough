@@ -1,0 +1,290 @@
+[
+{
+    "pk": 1, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 1, 
+        "name": "batch"
+    }
+},
+{
+    "pk": 2, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 11, 
+        "name": "title"
+    }
+},
+{
+    "pk": 3, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 27, 
+        "name": "io_files"
+    }
+},
+{
+    "pk": 4, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 12, 
+        "name": "memory"
+    }
+},
+{
+    "pk": 5, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 4, 
+        "name": "hydrate"
+    }
+},
+{
+    "pk": 6, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 5, 
+        "name": "eleme"
+    }
+},
+{
+    "pk": 7, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 7, 
+        "name": "param"
+    }
+},
+{
+    "pk": 8, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 6, 
+        "name": "conne"
+    }
+},
+{
+    "pk": 9, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 2, 
+        "name": "gener"
+    }
+},
+{
+    "pk": 10, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 3, 
+        "name": "rocks"
+    }
+},
+{
+    "pk": 11, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 8, 
+        "name": "diffusu"
+    }
+},
+{
+    "pk": 12, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 9, 
+        "name": "indom"
+    }
+},
+{
+    "pk": 13, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 10, 
+        "name": "incon"
+    }
+},
+{
+    "pk": 14, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 15, 
+        "name": "wetta"
+    }
+},
+{
+    "pk": 15, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 16, 
+        "name": "boundaries"
+    }
+},
+{
+    "pk": 16, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 17, 
+        "name": "solvr"
+    }
+},
+{
+    "pk": 17, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 18, 
+        "name": "times"
+    }
+},
+{
+    "pk": 18, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 19, 
+        "name": "elem_time_series"
+    }
+},
+{
+    "pk": 19, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 20, 
+        "name": "conx_time_series"
+    }
+},
+{
+    "pk": 20, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 21, 
+        "name": "ss_time_series"
+    }
+},
+{
+    "pk": 21, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 22, 
+        "name": "subdomains"
+    }
+},
+{
+    "pk": 22, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 23, 
+        "name": "nover"
+    }
+},
+{
+    "pk": 23, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 24, 
+        "name": "rando"
+    }
+},
+{
+    "pk": 24, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 25, 
+        "name": "mesh"
+    }
+},
+{
+    "pk": 25, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 28, 
+        "name": "time_discretization"
+    }
+},
+{
+    "pk": 26, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 29, 
+        "name": "nr_iteration"
+    }
+},
+{
+    "pk": 27, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 30, 
+        "name": "output_options"
+    }
+},
+{
+    "pk": 28, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 31, 
+        "name": "computational_parameters"
+    }
+},
+{
+    "pk": 29, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 32, 
+        "name": "df_well_model"
+    }
+},
+{
+    "pk": 30, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 33, 
+        "name": "sinkssources"
+    }
+},
+{
+    "pk": 31, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 26, 
+        "name": "extras"
+    }
+},
+{
+    "pk": 32, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 13, 
+        "name": "endcy"
+    }
+},
+{
+    "pk": 33, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 14, 
+        "name": "endfi"
+    }
+},
+{
+    "pk": 34, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 15, 
+        "name": "rcap"
+    }
+},
+{
+    "pk": 35, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 24, 
+        "name": "start"
+    }
+},
+{
+    "pk": 36, 
+    "model": "tough.qualifiedblockref", 
+    "fields": {
+        "blockType": 3, 
+        "name": "media"
+    }
+}
+]

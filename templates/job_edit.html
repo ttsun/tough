@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css"> 
+textarea{
+    width:auto;
+    font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+}
+
+#dirinput, #compSettingsForm{
+    padding:2em;
+}
+
+#id_max_walltime_0, #id_max_walltime_1{
+    width: 65px;
+}
+[name='rawinput']{
+    width:98%;
+}
+ul{
+    list-style-type: none;
+}
+li{
+    word-wrap: break-word;
+}
+p{
+    margin-left:12px;
+    margin-bottom:0px;
+}
+#sidebar a.btn-small{
+    display:block;
+    margin:5px 15px;
+}
+#sidebar a.btn-large{
+    margin:8px;
+}
+.upload-info{
+    font-size:0.9em;
+    padding-left:1em;
+}
+.upload-info{
+    font-size:0.8em;
+    padding-left:1em;
+}
+.others{
+    width:700px;
+    height:100px;
+}
+.tooltip{
+    width: 150px;
+    font-size:15px;
+}
+</style>
+<script type="text/javascript">
+
+var current_doc;
+var newjob;
+var homedir;
+var scratchdir;
+var jobfiles;
+var job_id;
+var current_tab;
+
+function parse_raw_for_varvals(blockname){
+    if(blockname == "title" || blockname == "rocks"){
+        return;
+    }
+    var varregex = /(?:&([\w\d\(\)]+)\s*){0,1}([\w\(\)\d]+)\s*=\s*([\w\d\'\.\-\+\s]*)[,\s]\s*\!{0,1}([\s\w\d\.\:\'\,\=><;]*)/;
+    var extravarregex = /(\s*([\w\d(\)]+)\s*)/
+    var lines = $("#"+blockname+"-raw").find("textarea").val().split("\n");
+    $("#" + blockname + "-comments").val("");
+    for (x in lines){
+        line = lines[x];
+        if(line.search(varregex) >= 0){
+            var name = line.match(varregex)[2].toLowerCase().trim();
+            var comments = line.match(varregex)[4];
+            $("#" + name.replace("(", "\\(").replace(")","\\)")).val(line.match(varregex)[3]);
+            $("#" + name.replace("(", "\\(").replace(")","\\)") + "-comments").val(comments);
+        }else if(line.search(/\w+/) >= 0 && line.search(/[><]+/) < 0){
+            if(line.search(extravarregex) == 0){
+                console.log("found a loose input");
+                $("#" + blockname + "-looseinput").val($("#"+blockname+"-looseinput").val() + line + "\n");
+            } else {
+                console.log("found a comment");
+                $("#" + blockname + "-comments").val($("#"+blockname+"-comments").val() + line + "\n");
+            }
+            
+        }
+    }
+    current_tab = "guided";
+}
+
+function recreate_raw(blockname){
+    if (current_tab != 'guided'){
+        return;
+    }
+    if(blockname == "title" || blockname == "rocks"){
+        return;
+    }
+    var name_list = "";
+    var samelist = false;
+    var num_indents = 0;
+    indents = "";
+    raw_text = "";
+    raw_text += ">>>" + blockname.toUpperCase() + "\n";
+    if($("#" + blockname + "-comments").val()){
+        console.log("first comment if entered");
+        raw_text += "! " + $("#" + blockname + "-comments").val() + "\n";
+    }
+    for(var x = 0; x <= $("#" + blockname + "-guided .varvals").length; x++){
+        if (x == $("#" + blockname + "-guided .varvals").length){
+            indents = "";
+            for(var y = 0; y < num_indents; y++){
+                indents += " ";
+            }
+
+            if(name_list != ""){
+                raw_text += indents + "/" + "\n";
+            }
+            break;
+        }
+        samelist = (name_list == $($("#" + blockname + "-guided .varvals")[x]).attr('data-namelist'));
+        if(samelist == false){
+            if(name_list == ""){
+                name_list = $($("#" + blockname + "-guided .varvals")[x]).attr('data-namelist');
+                num_indents = name_list.length + 7;
+                indents = "";
+                for(var y = 0; y < num_indents; y++){
+                    indents += " ";
+                }
+            } else {
+                name_list = $($("#" + blockname + "-guided .varvals")[x]).attr('data-namelist');
+                num_indents = name_list.length + 7;
+                indents = "";
+                for(var y = 0; y < num_indents; y++){
+                    indents += " ";
+                }
+                raw_text = raw_text.slice(0,raw_text.lastIndexOf(","));
+                raw_text += " " + $($("#" + blockname + "-guided .comments")[x]).val() + "\n" + indents + "/" + "\n";
+            }
+            raw_text += "&" + name_list + "  ";
+            var varname = "    " + $($("#" + blockname + "-guided .varvals")[x]).attr('id');
+        }
+        else{
+            var varname = indents + $($("#" + blockname + "-guided .varvals")[x]).attr('id');
+        }
+        var varval = $($("#" + blockname + "-guided .varvals")[x]).val();
+        var comment = $($("#" + blockname + "-guided .comments")[x]).val();
+        var varcommented = $($("#" + blockname + "-guided .varvals")[x]).attr("disabled");
+        if(comment){
+            console.log("second comment if entered");
+            comment = "! " + comment;
+        }
+        if(varcommented == "disabled"){
+            raw_text += "! " + varname + " = " + varval + ", " + comment + "\n";
+        }
+        else{
+            raw_text += varname + " = " + varval + ", " + comment + "\n";
+        }
+    }
+    raw_text = raw_text.slice(0,raw_text.lastIndexOf(","));
+    raw_text += " " + $($("#" + blockname + "-guided .comments")[x]).val() + "\n" + indents + "/" + "\n";
+    raw_text += ">>>END of the " + blockname.toUpperCase() + " data block";
+    $("#" + blockname + "-raw textarea").val(raw_text);
+    current_tab = "raw";
+}
+
+function setupBlocks(blockName){
+    var block = $("#reqblocks").append("<li></li>");
+    $("#reqblocks").children("li").last().attr("id", blockName);
+    $("#reqblocks").children("li").last().attr("class", "blockchoice");
+    $("#reqblocks").children("li").last().html("<a href=\"#\"" + blockName + ">" + blockName + "</a>");
+}
+
+function getjobfiles(){
+
+    $.ajax({
+        type:'GET',
+        url: TOUGH_SUBDIR + '/get_tough_files/' + job_id,
+
+        success: function(data){
+            jobfiles = data;
+        },
+        error: function(err){
+            alert("There was a problem getting the input files.");
+            $('#fileloader').hide();
+        },
+    });
+}
+
+$(document).ready(function(){    
+    $(".importinputtab").click(function(e){
+        current_tab = "import";
+    });
+    $(".blockinputarea").each(function(){
+        parse_raw_for_varvals($(this).attr("id"));
+    });
+    $("#compset").removeClass("inputarea").addClass("inputareaactive");
+    current_doc = "batch";
+    $(".inputarea:not(.inputareaactive)").hide();
+    // Listens for forms to be submitted
+    // Makes ajax calls when forms are submitted
+    // Makes an exception for dirinput because dirinput needs to change pages
+   $("form").submit(function(e){
+        e.preventDefault();
+        Alertify.log.info("Saving " + current_doc + " block");
+        var href = $(this).parent().parent().parent(".inputarea").attr("id");
+        $.post($(this).attr("action"), $(this).serialize(), function(data){
+            if(data.success){
+                Alertify.log.success("Block successfully saved!");                
+                if(data.content != ""){
+                    if($("[href='#"+href+"']").children('i').length == 0){
+                        $("[href='#"+href+"']").append("<i class='icon-ok'></i>");
+                    }
+                    $("#"+href).find("[name='rawinput']").val(data.content);
+                }else{
+                    $("[href='#"+href+"']").children("i").remove();
+                }
+            }else{
+                Alertify.log.error(data.error);
+            }
+        });
+        return false;
+   });   
+    $("#upload_MESH").tooltip({delay:{show:400, hide:225}});
+   $(".showhide").click(function(e){
+        e.preventDefault();
+        if ($(this).parent().parent().siblings().is(":hidden")){
+            $(this).parent().parent().siblings().slideDown();
+            $(this).text("Hide");
+        } else {
+            $(this).parent().parent().siblings().slideUp();
+            $(this).text("Show");
+        }
+   });
+   $("#optoggle").click();
+   $("#sidebar a:not(#submit_job, .popup, .showhide, .btn, #viewoutput)").click(function(e){
+        if($(this).parent("li[class~=disabled]").length == 0){
+            e.preventDefault();
+            $("form:visible").submit();
+            $("#sidebar .active").removeClass("active");
+            $(this).parent("li").addClass("active");
+            showInputArea($(this).attr("href"));
+        }
+    });
+   $("#submit_job").click(function(e){
+        Alertify.log.success("Submitting Job...");
+   })
+   $(".saveguided").click(function(e){
+        e.preventDefault();
+        recreate_raw($(this).attr("data-blockname"));
+        $("#" + $(this).attr("data-blockname") + "-raw form").submit();
+   });
+});
+
+function showInputArea(id){
+    $(".inputareaactive").removeClass("inputareaactive").hide();
+    current_doc = $(id).attr("id");
+    $(id).addClass("inputareaactive").show();
+    current_tab = $(".inputareaactive li.active").attr("data-input-type");
+    console.log($(id));
+    $(".inputarea:not(.inputareaactive)").hide();
+}
+
+
+</script>
+{% endblock head %}
+
+{%block content %}
+<div class = "row-fluid">
+    <div class = "span2 well" id = "sidebar">
+        {% if job_id %}
+            <ul id="jobdetails" class = "nav nav-list">
+                <li class = "nav-header">Job Details | <small><a class="popup" href="{% url 'noah.views.info_edit' job_id=job.pk %}">Edit</a> | <a id="viewoutput" href="{% url 'noah.views.job_view' job_id=job.pk %}">Info</a></small></li>
+                    <li><strong>Machine:</strong> {{job.machine|capfirst}}</li>
+                    <li><strong>Project:</strong> {{job.project.name|capfirst}}</li>
+                    <li><strong>Job Name:</strong> {{job_name|capfirst}}</li>
+            </ul>
+        {% endif %}
+        <ul class = "nav nav-list">
+            <li class = "nav-header">Required Information</li>
+            <li id = "batchselect" class = "blockchoice active"><a href="#compset" id = "batch" >Computational Settings</a></li>
+        </ul>
+        <ul id = "reqblocks" class = "nav nav-list">
+            <li class = "nav-header" id = "reqblocksheader">Required Blocks | <small class="showhidearea"><a class="showhide" id = "reqtoggle">Hide</a></small></li>
+            {% for block in job.get_title_block%}
+                <li class="blockchoice"><a href="#{{block.blockType.tough_name}}">{{block.blockType.name|capfirst}}
+                    {% if not block.is_empty %} <i class="icon-ok"></i>{% endif %}</a></li>
+            {% endfor %}
+            {% for block in job.get_req_blocks %}
+                <li class="blockchoice"><a href="#{{block.blockType.tough_name}}">{{block.blockType.name|capfirst}}
+                    {% if not block.is_empty %} <i class="icon-ok"></i>{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        <ul id = "opblocks" class="nav nav-list">
+            <li class = "nav-header" id = "opblocksheader"> Optional Blocks | <small class="showhidearea"><a class="showhide" id = "optoggle">Show</a></small></li>
+            {% for block in job.get_op_blocks %}
+                <li class="blockchoice"><a href="#{{block.blockType.tough_name}}">{{block.blockType.name|capfirst}}
+                    {% if not block.is_empty %}<i class="icon-ok"></i>{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        {% if job_id %}
+            <a href = "{% url 'noah.views.file_upload_view' job_id=job_id file_type='mesh' %}" id = "upload_MESH" class = "popup btn btn-small btn-primary span10" data-toggle="tooltip" title="Current Mesh:      Elements: {{mesh_elems}}      Connections: {{mesh_conns}}">Upload a MESH File</a>
+            <p class="">
+                <strong>Last MESH upload:</strong>
+            </p>
+            <div class="upload-info")>
+                <p>{{mesh_last_uploaded}}</p>
+                <p><strong>Name:</strong> {{mesh_upload_name}}</p>
+            </div>
+            <a href = "{% url 'noah.views.file_upload_view' job_id=job_id file_type='incon' %}" id = "upload_incon" class = "popup btn btn-small btn-primary span10">Upload an INCON File</a>
+            <p class="">
+                <strong>Last INCON upload:</strong>
+            </p>
+            <div class="upload-info">
+                <p>{{incon_last_uploaded}}</p>
+                <p><strong>Name:</strong> {{incon_upload_name}}</p>
+            </div>
+            <a href = "{% url 'noah.views.file_upload_view' job_id=job_id file_type='sinks_sources' %}" id = "upload_incon" class = "popup btn btn-small btn-primary span10" style = "font-size:10px">Upload SINKS&SOURCES</a>
+            <p class="upload-info">
+                <strong>Last SS upload:</strong>
+            </p>
+            <p>{{sinks_sources_last_uploaded}}</p>
+            <a href = "{% url 'noah.views.file_upload_view' job_id=job_id file_type='infile' %}" id = "upload_input" class = "popup btn btn-small btn-primary span10">Upload an Input File</a>
+            <a href="{% url 'noah.views.preview_input' job_id=job_id %}" target="_blank" class="btn btn-small span10">Preview Input File</a>
+            <a href = "{% url 'noah.views.ajax_submit' job_id=job_id %}" id="submit_job" class = "btn btn-success btn-large span11">SUBMIT</a>
+        {% endif %}
+    </div>
+    {% if job_id %}
+        <div class = "span10 inputarea" id = "compset">
+            <h2>Computational Settings</h2>
+            {% include "batch_form.html" %}
+        </div>
+        {% for block in job.get_title_block %}
+            {% include "block_input.html" %}
+        {% endfor %}
+        {% for block in job.get_req_blocks%}
+            {% include "block_input.html" %}
+        {% endfor %}
+        {% for block in job.get_op_blocks%}
+            {% include "block_input.html" %}
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock content %}    

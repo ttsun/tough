@@ -1,0 +1,114 @@
+<head>
+    <style type="text/css">
+        #errormsg{
+            display:none;
+        }
+    </style>
+</head>
+
+<div class="row-fluid">
+    <div class="span12 inputarea" id="dirsetup">
+        {% if setup_type == "new" %}
+            <h2>New Job</h2>
+        {% elif setup_type == "move" %}
+            <h2>Move Job</h2>
+        {% elif setup_type == "copy" %}
+            <h2>Copy Job</h2>
+        {% endif %}
+        <form action="{% url 'noah.views.create_job' %}" method="POST" id="dirinput">
+            <p id = "errormsg" class="error"></p>
+            {% csrf_token %}
+            <input type="hidden" name="setup_type" id="setup_type" value="{{setup_type|default:'new'}}" />
+            {% if job %}
+                <input type="hidden" name="job_id" value="{{job.pk}}" />
+            {% endif %}
+            
+            {% if setup_type != "move" %}                
+                <div>
+                    <label for="jobname">What do you want to name this new job?</label>
+                    <input type="text" name="jobname" id="id_name" size="50" value="{{job.jobname}}"/>
+                </div>
+                <div>
+                    <label for="edit_type">What version of TOUGH are you running?</label>
+                    <select name="edit_type">
+                        <option value="1">TOUGH+</option>
+                        <option value="0">TOUGH2-MP</option>
+                        <option value="0">Legacy (Other)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="machine">Which machine should this job run on?</label>
+                    <select name="machine" id="machine">
+                        <option value="hopper" selected="selected">hopper</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="project">Add job to existing project?</label>
+                    <select name="project">
+                        <option value=""> --- </option>
+                        {% for project in user.get_projects %}
+                            <option value="{{project.pk}}">{{project.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% else %}
+                <strong>Current Directory:</strong> <pre>{{job.jobdir}}</pre>
+                <input type="hidden" name="jobname" id="jobname" size="50" value="{{job.jobname}}"/>
+                <input type="hidden" name="machine" id="machine" value="{{job.machine}}">
+            {% endif %}
+            <div class="input-append">
+                {% if setup_type == "new" %}
+                    <label for "jobdir">Where would you like to create this job?</label>
+                {% else %}
+                    <label for "jobdir">Where would you like to {{setup_type}} this job?</label>
+                {% endif %}
+                <input type="text" name="jobdir" id="jobdir" size="100" value="">
+                <div class="btn-group">
+                    <button class="btn dropdown-toggle" data-toggle="dropdown">
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="dirSelect">
+                        <li>
+                            <a class='diroptions' href="#" id="homedir">Home Directory</a>
+                        </li>
+                        <li>
+                            <a class='diroptions' href="#" id="scratchdir">Scratch Directory</a>
+                            <li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <input class="btn btn-primary" type="submit" value="Create"/>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    homedir = "/global/homes/" + "{{user.username}}".charAt('0') + "/" + "{{user.username}}";
+    scratchdir = "/global/scratch/sd/" + "{{user.username}}";
+    $(".diroptions").click(function(e) {
+        e.preventDefault();
+        if ($(this).attr("id") == "homedir") {
+            $("#jobdir").val(homedir);
+        } else {
+            $("#jobdir").val(scratchdir);
+        }
+    });
+    $("#dirinput").submit(function(e){
+        if(validateSpecialChars($("#id_name").val())){
+            var values = {};
+            $.each($('#dirinput').serializeArray(), function(i, field) {
+                values[field.name] = field.value;
+            });
+            Alertify.log.info("Creating job directory for \"" + values["jobname"] + "\" in \"" + values["jobdir"] + "\"");
+            return true;
+        }else{
+            $("#errormsg").text("Please enter a valid job name.");
+            $("#errormsg").show();
+            return false;
+        }
+   });
+    $(document).ready(function(){
+        $("#jobdir").val(homedir)
+    })
+</script>

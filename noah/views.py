@@ -128,23 +128,6 @@ def preview_input(request, job_id):
     response['Content-Disposition'] = 'filename=' + j.jobname + "_preview"
     return response
 
-
-@login_required
-def submit(request, job_id):
-    j = Job.objects.get(id=job_id)
-    finalinput = ''
-    for block in j.block_set.all():
-        if block.blockType != "MESH" and block.blockType != "batch":
-            finalinput += block.content + '\n'
-    batch = j.block_set.get(blockType="batch")
-    mesh = j.block_set.get(blockType="mesh")
-    j.put_file("input", finalinput)
-    j.put_file("tough.pbs", batch)
-    j.put_file("MESH", mesh)
-    j.submit()
-    return HttpResponse("")
-
-
 @login_required
 def jobs(request):
     u = NoahUser.objects.get(username=request.user)
@@ -160,9 +143,6 @@ def jobs(request):
 def rebuild_job(request, job_id):
     j = get_object_or_404(Job, pk = job_id)
     j.rebuild()
-    j.block_set.get(blockType__tough_name="mesh").reset_block_upload_times()
-    j.block_set.get(blockType__tough_name="incon").reset_block_upload_times()
-    j.block_set.get(blockType__tough_name="sinks_sources").reset_block_upload_times()
     messages.success(request, "%s successfully rebuilt at %s" % (j.jobname, j.jobdir))
     if request.is_ajax():
         return HttpResponse(simplejson.dumps({"success": True, "job_id": j.pk, "redirect": reverse("noah.views.job_edit", kwargs={"job_id": j.pk})}), content_type="application/json")
@@ -283,29 +263,7 @@ def create_job(request, job_id=None, type="new"):
                 populate_job(j)
 
             if request.POST.get("setup_type") == "copy" and request.POST.get("job_id"):
-                old_job = Job.objects.get(pk=request.POST.get("job_id"))
-                j.queue = old_job.queue
-                j.numprocs = old_job.numprocs
-                j.maxwalltime = old_job.maxwalltime
-                j.emailnotifications = old_job.emailnotifications
-                j.nodemem = old_job.nodemem
-                j.save()
-
-                inconblock = j.block_set.get(blockType__tough_name = "incon")
-                inconblock.last_uploaded = (datetime.utcnow().replace(tzinfo=utc))
-                inconblock.upload_file_name = old_job.block_set.get(blockType__tough_name = 'incon').upload_file_name
-                inconblock.save()
-
-                m = j.block_set.get(blockType__tough_name = "mesh")
-                m.last_uploaded = (datetime.utcnow().replace(tzinfo=utc))
-                m.upload_file_name = old_job.block_set.get(blockType__tough_name = 'mesh').upload_file_name
-                m.num_conn = old_job.block_set.get(blockType__tough_name = 'mesh').num_conn
-                m.num_elem = old_job.block_set.get(blockType__tough_name = 'mesh').num_elem
-                m.save()
-                for block in old_job.block_set.all():
-                    temp_block = j.block_set.get(blockType__pk=block.blockType.pk)
-                    temp_block.content = block.content
-                    temp_block.save()
+                j.copy_other(otherjob_id = request.POST.get("job_id"))
             #create default vasp files
             #render default setup form
             messages.success(request, "%s successfully created at %s" % (j.jobname, j.jobdir))
@@ -341,10 +299,19 @@ def job_edit(request, job_id):
                                   {'job_name': j.jobname, 'job_id': job_id, 'job': j},
                                   context_instance=RequestContext(request))
         else:
+            extra_info_dict = {}
+
+            #tough specific. extra info about updated blocks
             mesh = j.block_set.get(blockType__tough_name = 'mesh')
+            extra_info_dict.update({"mesh_upload_name": mesh.upload_file_name, "mesh_elems":mesh.num_elem, "mesh_conns":mesh.num_conn,  "mesh_last_uploaded": mesh.last_uploaded})
             incon = j.block_set.get(blockType__tough_name = 'incon')
+            extra_info_dict.update({"incon_upload_name":incon.upload_file_name, "incon_last_uploaded":incon.last_uploaded})
+            sinks_sources = j.block_set.get(blockType__tough_name='sinks_sources')
+            extra_info_dict.update({"sinks_sources_last_uploaded":sinks_sources.last_uploaded})
+
+            return_dict = {'job_name':j.jobname, 'job_id':job_id, 'job':j}.update(extra_info_dict)
             return render_to_response('job_edit.html',
-                                  {'job_name': j.jobname, 'job_id': job_id, "mesh_upload_name": mesh.upload_file_name, "mesh_elems":mesh.num_elem, "mesh_conns":mesh.num_conn,  "mesh_last_uploaded": mesh.last_uploaded, "incon_upload_name":incon.upload_file_name, "incon_last_uploaded":incon.last_uploaded, "sinks_sources_last_uploaded":j.block_set.get(blockType__tough_name='sinks_sources').last_uploaded, 'job': j},
+                                  return_dict,
                                   context_instance=RequestContext(request))
 
 
@@ -366,6 +333,7 @@ def ajax_submit(request, job_id):
         except Exception:
             return HttpResponse(simplejson.dumps({"success": False, "error": "Unable to save input file."}), content_type="application/json")
 
+        #batch is block with pk 1
         batch_text = j.block_set.get(blockType__pk=1).content
 
         try:

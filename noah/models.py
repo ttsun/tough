@@ -117,6 +117,32 @@ class Job(models.Model):
             
         return content
 
+    def copy_other(self, otherjob_id):
+        old_job = Job.objects.get(pk=otherjob_id)
+        self.queue = old_job.queue
+        self.numprocs = old_job.numprocs
+        self.maxwalltime = old_job.maxwalltime
+        self.emailnotifications = old_job.emailnotifications
+        self.nodemem = old_job.nodemem
+        self.save()
+
+        #tough specific. Copies blocks from previous job into this one
+        inconblock = self.block_set.get(blockType__tough_name = "incon")
+        inconblock.last_uploaded = (datetime.utcnow().replace(tzinfo=utc))
+        inconblock.upload_file_name = old_job.block_set.get(blockType__tough_name = 'incon').upload_file_name
+        inconblock.save()
+
+        m = self.block_set.get(blockType__tough_name = "mesh")
+        m.last_uploaded = (datetime.utcnow().replace(tzinfo=utc))
+        m.upload_file_name = old_job.block_set.get(blockType__tough_name = 'mesh').upload_file_name
+        m.num_conn = old_job.block_set.get(blockType__tough_name = 'mesh').num_conn
+        m.num_elem = old_job.block_set.get(blockType__tough_name = 'mesh').num_elem
+        m.save()
+        for block in old_job.block_set.all():
+            temp_block = self.block_set.get(blockType__pk=block.blockType.pk)
+            temp_block.content = block.content
+            temp_block.save()
+
     def save_block(self, blockType, contents):
         b = self.block_set.get(blockType=blockType)
         b.content = contents
@@ -131,6 +157,10 @@ class Job(models.Model):
         self.time_started = None
         self.time_completed = None
         self.save()
+        #tough specific block time reseting
+        self.block_set.get(blockType__tough_name="mesh").reset_block_upload_times()
+        self.block_set.get(blockType__tough_name="incon").reset_block_upload_times()
+        self.block_set.get(blockType__tough_name="sinks_sources").reset_block_upload_times()
 
     def put_file(self, filename, contents, *args, **kwargs):
         """

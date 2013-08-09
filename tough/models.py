@@ -54,6 +54,27 @@ class Block(models.Model):
         self.save()
         return
 
+    def update_upload_info(self, uploaded_file):
+        elem_regex = '(\w)+(\s)+(&Elem)'
+        conn_regex = '(\w)+(\s)+(&ConX)'
+        elem_count = 0
+        conn_count = 0
+
+        for chunk in uploaded_file.chunks():
+            lines = chunk.split('\n')
+            for line in lines:
+                if re.search(elem_regex, line) >= 1:
+                    elem_count += 1
+                elif re.search(conn_regex, line) >= 1:
+                    conn_count += 1
+
+        self.upload_file_name = uploaded_file.name
+        self.num_elem = elem_count
+        self.num_conn = conn_count
+        self.last_uploaded = datetime.now()
+        self.save()
+        return
+
 
 class QualifiedBlockRef(models.Model):
     blockType = models.ForeignKey(BlockType)

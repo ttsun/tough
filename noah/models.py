@@ -152,31 +152,15 @@ class Job(models.Model):
         
        
     def upload_files(self, uploaded_file, filename, is_block=True):
-        elem_regex = '(\w)+(\s)+(&Elem)'
-        conn_regex = '(\w)+(\s)+(&ConX)'
-        elem_count = 0
-        conn_count = 0
         path = self.jobdir
         cookie_str=self.user.cookie
         url = '/file/%s%s/' % (self.machine, path)
 
         response = util.upload_request(url=url, uploaded_file=uploaded_file, filename = filename, cookie_str=cookie_str) #problem here
 
-        if filename == 'mesh':
-            for chunk in uploaded_file.chunks():
-                lines = chunk.split('\n')
-                for line in lines:
-                    if re.search(elem_regex, line) >= 1:
-                        elem_count += 1
-                    elif re.search(conn_regex, line) >= 1:
-                        conn_count += 1
         if is_block:
             b = self.block_set.get(blockType__tough_name = filename)
-            b.upload_file_name = uploaded_file.name
-            b.num_elem = elem_count
-            b.num_conn = conn_count
-            b.last_uploaded = datetime.now()
-            b.save()
+            b.update_upload_info(uploaded_file = uploaded_file)
         if response.status_code!=200:
             raise Exception(response)
         return response
@@ -273,10 +257,6 @@ class Job(models.Model):
         util.newt_request('/command/'+self.machine, "POST", {"executable": "/bin/rm /tmp/"+zipfilename}, cookie_str=cookie_str)
 
         return content
-    
-    def get_selected_zip(self, directory, selected_files):
-        url = '/command/' + self.machine
-
 
     def import_file(self, filename, from_job_id):
         from_job = Job.objects.get(pk = from_job_id)
@@ -595,6 +575,7 @@ class Job(models.Model):
         return FileUploadForm()
     
     
+    #tough specific parsing for parsing tough infiles to blocks
     def parse_input_file(self, file_from):
         lines = file_from.split("\n")
         block = ""
@@ -658,7 +639,7 @@ class Job(models.Model):
         b.save()
         return blockschanged
 
-
+    #searching psuedonyms for different TOUGH blocks. Also necessary to put this in job. 
     def search_block_references(self, blocktype):
         from tough.models import QualifiedBlockRef
         if (self.block_set.filter(blockType__tough_name = blocktype).count() != 0):
@@ -687,7 +668,7 @@ class Job(models.Model):
     def get_op_blocks(self):
         return self.block_set.filter(blockType__required=0)
 
-
+#also tough specific input combining for putting blocks together
 def combine_inputs(job):
     text = ''
     for block in job.get_title_block():
@@ -701,6 +682,7 @@ def combine_inputs(job):
 
     return text
 
+#TOUGH specific. populates job with blocks
 def populate_job(job):
     from tough.models import BlockType, Block
     for blocktype in BlockType.objects.all():
